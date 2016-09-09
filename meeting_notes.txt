@@ -1,6 +1,98 @@
+
+9/9/16
+Next meeting: Wednesday in class
+
+Goals:  *Prototype by next week
+
+
+Art : 90’s aesthetic
+
+
+640 x 480
+
+Jobs:
+John- Character assets
+Ming- candy spawn pattern
+Mary- Sprite (whatever we caaannnn)
+Diana- Backgrounds (whatever we can)
+Taylor– THE GOOD SOUNDS 
+Sean- Backgrounds (whatever we can)
+
+
+we all do candy
+score thingy to reward player
+
+
+
+starting ideas:
+	take hallucinogen to trip and go between worlds
+	2 backgrounds  -normal & 90s color
+	“hey kid wanna eat this candy”
+	take drugs to progress
+	collectable candy
+	kick flip skateboard
+	melty walls
+	eyes	
+	platform time manipulator 
+	collectable candy
+	vertical jump game
+	endless climber
+
+
+
+Assets: 
+	Sprites:
+		-scateboard kid  >>sick tricks, jump animation, taking candy 
+		-creepy guy >> walk animation, giving candy
+	Objects:
+		-Candy collectable:
+				spawns near the previous candy
+		-check points:
+				lets player know how far 
+		-text bubble
+	Backgrounds:
+		- van in background
+		- sky and side walls(jumping from wall to wall)
+		- before high
+		- after high
+	Sound:
+		-before candy music
+		-take candy sound
+		-after candy music
+		- mushroom sound 
+	
+
+
+JUICE:
+	-rainbow bows
+	-unicorn
+	-trail
+	-floating van
+	- man flying in space
+	
+*take candy cycle
+*the game lets you know when score is 420
+
+
+	
+
+
+	
+           
+
+*We have idea for game and we can start working on
+	*everyone has jobs to start
+	*stuff we can bring for next meeting
+**
+
+
+
+
+
+
+———————————————————————————————————————————————————
 9/7/16
 Next meeting: Union Friday 5pm 
-
 
 John- Programmer
 Ming- Programmer
@@ -12,7 +104,12 @@ Sean - Variable
 
 
 
-Assignment 1 : juicy no weapons 
+
+
+
+
+
+Assignment 1 : it’s dangerous to go alone, take this — juicy
 
 ideas
 * Weapon that’s not used as weapon 
@@ -31,3 +128,5 @@ Art Style :
 Have by next meeting :
 -Watch Juicy video
 -Bring ideas
+
+
