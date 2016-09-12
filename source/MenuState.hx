@@ -16,6 +16,8 @@ class MenuState extends FlxState
 
 	override public function update(elapsed:Float):Void
 	{
+		//Immediately jump to main scene for testing
+		FlxG.switchState(new PlayState());
 		super.update(elapsed);
 	}
 }
