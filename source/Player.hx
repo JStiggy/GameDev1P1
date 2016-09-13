@@ -41,6 +41,11 @@ class Player extends FlxSprite
 		this.acceleration.x = this.maxVelocity.x * ((this.isTouching(FlxObject.FLOOR)) ? 4 : 3);
 		}
 		
+		//used for checking backgrounds
+		//if (FlxG.keys.anyJustPressed([SPACE, W, UP])){
+		//	this.y-=12 
+		//}
+		
 		//Jump
 		if (FlxG.keys.anyJustPressed([SPACE, W, UP]) && this.isTouching(FlxObject.FLOOR) && this.acceleration.y > 0)
 		{
