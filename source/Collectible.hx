@@ -24,7 +24,9 @@ class Collectible extends FlxSprite {
 	
 	override public function update(elapsed:Float):Void
 	{
-		if (this.alpha < .05 || _killHeight < this.y){
+		if ( _killHeight < this.y) alpha = 0;
+		
+		if (this.alpha < .05){
 			this.kill();
 		}
 		super.update(elapsed);

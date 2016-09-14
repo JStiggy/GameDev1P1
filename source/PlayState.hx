@@ -123,13 +123,21 @@ class PlayState extends FlxState
 		if (_killHeight <= _player.y){
 			FlxG.switchState(new PlayState());
 		}
+		
 		//Will be enabled after testing, for now the camera does not scroll
 		FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
 		FlxG.collide(_player, _floorGroup);
-		//FlxG.overlap(_player, _collectibleGroup, playerCollectibleOverlap);
+		
 		//FlxG.overlap is not accurate enough when rotation and speed are 
 		for (_c in _collectibleGroup)
 		{
+			if (_c.alpha <=.05){
+				_collectibleGroup.remove(_c);
+				_c.destroy();
+				continue;
+			}
+			
+			
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
 			{
 				playerCollectibleOverlap(_player, _c);
