@@ -16,18 +16,25 @@ import flixel.util.FlxTimer;
 
 class PlayState extends FlxState
 {
+	private var _incre:Float=0;
+	var _counter:Int=0;
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
 	private var _floorGroup:FlxGroup; //Used for the starting floor
 	private var _collectibleGroup:FlxTypedGroup<Collectible>; //Used fo collsion detection of all collectibles
+	
+	private var _EGroup:FlxTypedGroup<Explode>;
+
+
 	private var _floor:FlxSprite; //Floor used for at start
 	private var _cameraOffset:Int = 300; //Offset for postioning the camera in reagrds to the player
 	private var _playerParticleSys:ModParticleSystem; //Particle system used when getting a collectible
 	private var _RNG:FlxRandom; //Random number generator
+
 	private var _scoreText:FlxText; //If a hud is created this shhould be moved into that class
 	
-	private var _killHeight:Float = 1000; //When the player falls to this height, the player will lose the current round
+	private var _killHeight:Float = 1300; //When the player falls to this height, the player will lose the current round
 	
 	private var bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
 	private var _baseBackground:FlxSprite;
@@ -96,6 +103,8 @@ class PlayState extends FlxState
 		//Create a group to conatain all the collectibles, used for collsion detection
 		_collectibleGroup = new FlxTypedGroup<Collectible>();
 		add(_collectibleGroup);
+		_EGroup = new FlxTypedGroup<Explode>();
+		add(_EGroup);
 		
 		//Setup the display for the score, Scrollfactor is set to zero
 		_scoreText = new FlxText(10, 10, 50, Std.string(_score), 18);
@@ -135,6 +144,26 @@ class PlayState extends FlxState
 				playerCollectibleOverlap(_player, _c);
 			}
 		}
+		for (_e in _EGroup)
+		{
+			if (FlxG.pixelPerfectOverlap(_player, _e, 255)==false)
+			{
+				_e._overlap=false;
+			}
+			if (_e._overlap==true){continue;}
+			
+			if (FlxG.pixelPerfectOverlap(_player, _e, 255) && _player.velocity.y<0)
+			{
+				_e._overlap=true;
+				_player.velocity.y+=1000;
+			}
+			
+			else if (FlxG.pixelPerfectOverlap(_player, _e, 255)&&_player.velocity.y>=0)
+			{
+				_e._overlap=true;
+				_player.velocity.y-=1000;
+			}
+		}
 		
 		super.update(elapsed);
 	}
@@ -170,16 +199,41 @@ class PlayState extends FlxState
 	*/
 	private function scoreTally(elapsed:Float):Void
 	{
-		_displayScore =  Math.ceil(FlxMath.lerp(_displayScore, _score, .25 * elapsed));
+		_displayScore =  _spawner.y-_incre;
 		_scoreText.text = Std.string(_displayScore);
 	}
 	
 	private function spawnCollectible(t:FlxTimer):Void
 	{
+		
 		_spawner.moveSpawner();
+		
 		var _c:Collectible = new Collectible(_spawner.x,_spawner.y);
 		_collectibleGroup.add(_c);
 		_c.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
 		add(_c);
+		
+		
+		for (_e in _EGroup){
+			if (_player.y-_e.y<=-100){
+				_e.solid = false;
+				_e.kill();
+
+			}
+		}
+		if(_spawner.y - _incre<=-500){
+			var _e:Explode = new Explode(_spawner.x ,_spawner.y);
+		
+			_incre=_spawner.y;
+			_EGroup.add(_e);
+			
+			add(_e);
+		}
+		
+		_counter++;
+		
+		
+		
+
 	}
 }
