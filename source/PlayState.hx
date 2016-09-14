@@ -19,7 +19,6 @@ class PlayState extends FlxState
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
-	private var _floorGroup:FlxGroup; //Used for the starting floor
 	private var _collectibleGroup:FlxTypedGroup<Collectible>; //Used fo collsion detection of all collectibles
 	private var _floor:FlxSprite; //Floor used for at start
 	private var _cameraOffset:Int = 300; //Offset for postioning the camera in reagrds to the player
@@ -45,42 +44,44 @@ class PlayState extends FlxState
 		//Disable the mouse
 		FlxG.mouse.visible = false;
 	
+		//Prevent the player from softlocking the game by pausing right as they die
+		FlxG.timeScale = 1;
+
+		_RNG = new FlxRandom();
+		
 		//Backgrounds
 		_baseBackground = new FlxSprite(0, 0);
 		_baseBackground.loadGraphic(AssetPaths.background01__png, false, 640, 1308);
 		
 		_baseBackground.scale.set(bgSF,bgSF);
-		_baseBackground.setPosition(165,-500);
+		_baseBackground.setPosition(165,-450);
 		add(_baseBackground);
 		
 		_bottomScrollBackground = new FlxSprite(0, 0);
-		_bottomScrollBackground.loadGraphic(AssetPaths.repeating_sky01__png, false, 640, 1308);
+		_bottomScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
 		_middleScrollBackground = new FlxSprite(0, 0);
-		_middleScrollBackground.loadGraphic(AssetPaths.repeating_sky01__png, false, 640, 1308);
+		_middleScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
 		_topScrollBackground = new FlxSprite(0, 0);
-		_topScrollBackground.loadGraphic(AssetPaths.repeating_sky01__png, false, 640, 1308);
+		_topScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
 		
 		_bottomScrollBackground.scale.set(bgSF,bgSF);
-		_bottomScrollBackground.setPosition(165,-500-944);
+		_bottomScrollBackground.setPosition(165,-450-944);
 		add(_bottomScrollBackground);
 		
 		_middleScrollBackground.scale.set(bgSF,bgSF);
-		_middleScrollBackground.setPosition(165,-500-944*2);
+		_middleScrollBackground.setPosition(165,-450-944*2);
 		add(_middleScrollBackground);
 		
 		_topScrollBackground.scale.set(bgSF,bgSF);
-		_topScrollBackground.setPosition(165,-500-944*3);
+		_topScrollBackground.setPosition(165,-450-944*3);
 		add(_topScrollBackground);
 		
 		//Set up a testing floor
-		_floorGroup = new FlxGroup();
 		_floor = new FlxSprite(10, FlxG.height - 25);
 		_floor.makeGraphic(FlxG.width - 20, 20, FlxColor.TRANSPARENT);
 		_floor.immovable = true;
 		_floor.solid = true;
 		_floor.elasticity = 0.8;
-		_floorGroup.add(_floor);
-		add(_floorGroup);
 		add(_floor);
 		
 		//Create the player and particle system actor
@@ -91,8 +92,6 @@ class PlayState extends FlxState
 		add(_spawner);
 		add(_player);
 		
-		FlxG.watch.add(_player, "y");
-		
 		//Create a group to conatain all the collectibles, used for collsion detection
 		_collectibleGroup = new FlxTypedGroup<Collectible>();
 		add(_collectibleGroup);
@@ -102,15 +101,15 @@ class PlayState extends FlxState
 		_scoreText.scrollFactor.x = _scoreText.scrollFactor.y = 0;
 		add(_scoreText);
 		
+		//Create a timer that spawns a collectible every .5 seconds
 		_timer = new FlxTimer();
 		_timer.start(.5, spawnCollectible, 0);
 		
-		//Sys.time wont work
-		_RNG = new FlxRandom(12);
+		//Start the music for the scene
+		FlxG.sound.playMusic(AssetPaths.rock_candy__ogg, 1, true);
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
-		//FlxG.camera.follow(_player, PLATFORMER);
 		super.create();
 	}
 
@@ -124,20 +123,23 @@ class PlayState extends FlxState
 			FlxG.switchState(new PlayState());
 		}
 		
-		//Will be enabled after testing, for now the camera does not scroll
+		//Lerp the camer to the player location using a predefined offset
 		FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
-		FlxG.collide(_player, _floorGroup);
+		FlxG.collide(_player, _floor);
 		
-		//FlxG.overlap is not accurate enough when rotation and speed are 
+		
+		//FlxG.overlap is not accurate enough when rotation and speed are used, instead pixel perfect overlap is used
 		for (_c in _collectibleGroup)
 		{
-			if (_c.alpha <=.05){
+			//If the collectible is considered dead remove from the group and destroy, 
+			//does not call the collision code in this case
+			if (!_c.alive){
 				_collectibleGroup.remove(_c);
 				_c.destroy();
 				continue;
 			}
 			
-			
+			//Check for overlap between the collectible and player
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
 			{
 				playerCollectibleOverlap(_player, _c);
@@ -165,8 +167,9 @@ class PlayState extends FlxState
 		//Give the fading away collectible a random velocity, release particles, and play a sound
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
 		_playerParticleSys.releaseParticles(5);
-		FlxG.sound.play(AssetPaths.infringement__wav);
-	
+		
+		FlxG.sound.play(AssetPaths.collectible__wav);
+		
 		//Remove collision from the collectible so that Overlap is not triggered
 		collectible.solid = false;
 	}
@@ -182,6 +185,11 @@ class PlayState extends FlxState
 		_scoreText.text = Std.string(_displayScore);
 	}
 	
+	/**
+	* Spawn a collectible at the position of the spawner after a certain time frame
+	*
+	* @param    t: Functions that are called by a timer need a timer as an arg
+	* */
 	private function spawnCollectible(t:FlxTimer):Void
 	{
 		_spawner.moveSpawner();

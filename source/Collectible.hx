@@ -17,7 +17,7 @@ class Collectible extends FlxSprite {
 	{
 		super(X, Y);
 		_killHeight = Y + 1200;
-		this.makeGraphic(32, 32, FlxColor.GREEN);
+		this.loadGraphic(AssetPaths.candy_with_wrapper__png, false, 29, 29);
 		this.maxVelocity.set(0, 100);
 		this.acceleration.y = 50;
 	}

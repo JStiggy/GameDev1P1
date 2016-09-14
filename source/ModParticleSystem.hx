@@ -29,7 +29,7 @@ class ModParticleSystem extends FlxEmitter
 		_attachedObject = _obj;
 		for (i in 1 ... 100) {
 			var p = new FlxParticle();
-			p.loadGraphic("assets/images/" + _fileName, false, 32, 32);
+			p.loadGraphic("assets/images/Collectibles/" + _fileName, false, 32, 32);
 			p.exists = false;
 			this.add(p);
 		}
