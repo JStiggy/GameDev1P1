@@ -17,6 +17,8 @@ import flixel.system.FlxSound;
 
 class PlayState extends FlxState
 {
+	private var _incre:Float=0;
+	private var _EGroup:FlxTypedGroup<Explode>;
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
@@ -103,7 +105,9 @@ class PlayState extends FlxState
 		//Create a group to conatain all the collectibles, used for collsion detection
 		_collectibleGroup = new FlxTypedGroup<Collectible>();
 		add(_collectibleGroup);
-
+		_EGroup = new FlxTypedGroup<Explode>();
+		add(_EGroup);
+		
 		_collectibleGroup.add(_startCandy);
 		
 		//Setup the display for the score, Scrollfactor is set to zero
@@ -190,6 +194,26 @@ class PlayState extends FlxState
 				playerCollectibleOverlap(_player, _c);
 			}
 		}
+		for (_e in _EGroup)
+		{
+			if (FlxG.pixelPerfectOverlap(_player, _e, 255)==false)
+			{
+				_e._overlap=false;
+			}
+			if (_e._overlap==true){continue;}
+			
+			if (FlxG.pixelPerfectOverlap(_player, _e, 255) && _player.velocity.y<0)
+			{
+				_e._overlap=true;
+				_player.velocity.y+=1000;
+			}
+			
+			else if (FlxG.pixelPerfectOverlap(_player, _e, 255)&&_player.velocity.y>=0)
+			{
+				_e._overlap=true;
+				_player.velocity.y-=1000;
+			}
+		}
 		
 		super.update(elapsed);
 	}
@@ -239,6 +263,14 @@ class PlayState extends FlxState
 		_collectibleGroup.add(_c);
 		_c.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
 		add(_c);
+		if(_spawner.y - _incre<=-500){
+			var _e:Explode = new Explode(_spawner.x + _RNG.int(-1,1,[0])*65,_spawner.y);
+			
+			_incre=_spawner.y;
+			_EGroup.add(_e);
+			
+			add(_e);
+		}
 	}
 	
 	/**
@@ -251,3 +283,4 @@ class PlayState extends FlxState
 		FlxG.switchState(new PlayState());
 	}	
 }
+
