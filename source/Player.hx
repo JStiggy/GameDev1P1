@@ -7,7 +7,7 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
 /**
- * ...
+ * Player Character
  * @author John Steigerwald
  */
 class Player extends FlxSprite

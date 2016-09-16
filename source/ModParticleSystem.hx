@@ -4,7 +4,6 @@ import flixel.math.FlxMath;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.FlxSprite;
-
 /**
  * Generate a user defined particle effects at a location of _attachedObject, with velocity opposite of the current velocity.
  * @author John Steigerwald

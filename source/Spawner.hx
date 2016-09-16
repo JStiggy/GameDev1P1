@@ -34,7 +34,7 @@ class Spawner extends FlxObject
 			
 		} while (_x < 50 || _x > 590);
 		
-		this.setPosition( _x, Math.min(this.y, _player.y - 960));
+		this.setPosition( _x, Math.min(this.y, _player.y - 780));
 	}
 	
 }

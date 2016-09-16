@@ -1,5 +1,4 @@
 package;
-
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
 import flixel.tweens.FlxTween;
@@ -30,10 +29,9 @@ class PlayState extends FlxState
 	
 	private var bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
 	private var _baseBackground:FlxSprite;
+	private var _tripBackground:TripBackground;
 	
-	private var _bottomScrollBackground:FlxSprite;
-	private var _middleScrollBackground:FlxSprite;
-	private var _topScrollBackground:FlxSprite;
+	private var _scrollbackgroundGroup:FlxTypedGroup<FlxSprite>;
 	
 	//Can be compartmentalized into own class using FlxG.state.add
 	private var _spawner:Spawner; //Used to spawn collectibles
@@ -52,31 +50,31 @@ class PlayState extends FlxState
 		//Backgrounds
 		_baseBackground = new FlxSprite(0, 0);
 		_baseBackground.loadGraphic(AssetPaths.background01__png, false, 640, 1308);
-		
-		_baseBackground.scale.set(bgSF,bgSF);
-		_baseBackground.setPosition(165,-450);
+		_baseBackground.scale.set(bgSF, bgSF);
+		_baseBackground.setPosition(165, -500);
 		add(_baseBackground);
+		_baseBackground.kill();
 		
-		_bottomScrollBackground = new FlxSprite(0, 0);
-		_bottomScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
-		_middleScrollBackground = new FlxSprite(0, 0);
-		_middleScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
-		_topScrollBackground = new FlxSprite(0, 0);
-		_topScrollBackground.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1,1)) + ".png", false, 640, 1308);
+		_tripBackground = new TripBackground();
+		add(_tripBackground);
 		
-		_bottomScrollBackground.scale.set(bgSF,bgSF);
-		_bottomScrollBackground.setPosition(165,-450-944);
-		add(_bottomScrollBackground);
+
 		
-		_middleScrollBackground.scale.set(bgSF,bgSF);
-		_middleScrollBackground.setPosition(165,-450-944*2);
-		add(_middleScrollBackground);
+		_scrollbackgroundGroup = new FlxTypedGroup<FlxSprite>();
+		add(_scrollbackgroundGroup);
 		
-		_topScrollBackground.scale.set(bgSF,bgSF);
-		_topScrollBackground.setPosition(165,-450-944*3);
-		add(_topScrollBackground);
+		for (i in 1 ... 4)
+		{
+			_score+= i;
+			var _bg:FlxSprite = new FlxSprite(0, 0);
+			_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 1)) + ".png", false, 640, 1308);
+			_bg.scale.set(bgSF, bgSF);
+			_bg.setPosition(165, -450 - 944 * i);
+			add(_bg);
+			_scrollbackgroundGroup.add(_bg);
+		}
 		
-		//Set up a testing floor
+		//Set up a floor
 		_floor = new FlxSprite(10, FlxG.height - 25);
 		_floor.makeGraphic(FlxG.width - 20, 20, FlxColor.TRANSPARENT);
 		_floor.immovable = true;
@@ -87,7 +85,7 @@ class PlayState extends FlxState
 		//Create the player and particle system actor
 		_player = new Player(FlxG.width/2, _floor.y-64);
 		_spawner = new Spawner(FlxG.width/2, 0, _player);
-		_playerParticleSys = new ModParticleSystem(_player, "particle_test.png", 0);
+		_playerParticleSys = new ModParticleSystem(_player, "candy_particle.png", 0);
 		add(_playerParticleSys); //Particle system is added first so renders after the System
 		add(_spawner);
 		add(_player);
@@ -106,10 +104,11 @@ class PlayState extends FlxState
 		_timer.start(.5, spawnCollectible, 0);
 		
 		//Start the music for the scene
-		FlxG.sound.playMusic(AssetPaths.rock_candy__ogg, 1, true);
+		FlxG.sound.playMusic(AssetPaths.rock_candy__ogg, .01, true);
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
+		FlxG.camera.fade(FlxColor.WHITE, 2, true);
 		super.create();
 	}
 
@@ -118,9 +117,21 @@ class PlayState extends FlxState
 		
 		scoreTally(elapsed);
 		
-		_killHeight = Math.min(_killHeight, _player.y + 570);
-		if (_killHeight <= _player.y){
-			FlxG.switchState(new PlayState());
+		for (_bg in _scrollbackgroundGroup)
+		{
+			if (_player.y < _bg.y-944*1.5)
+			{
+				_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 2)) + ".png", false, 640, 1308);
+				_bg.scale.set(bgSF,bgSF);
+				_bg.setPosition(_bg.x, _bg.y - 944 * 3);
+			}
+		}
+		
+		_killHeight = Math.min(_killHeight, _player.y + 480);
+		if (_killHeight <= _player.y && _timer.time == .5){
+			_timer.start(1, reloadScene, 1);
+			FlxG.camera.fade(FlxColor.WHITE, 1, false);
+			//FlxG.switchState(new PlayState());
 		}
 		
 		//Lerp the camer to the player location using a predefined offset
@@ -142,6 +153,11 @@ class PlayState extends FlxState
 			//Check for overlap between the collectible and player
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
 			{
+				if (!_baseBackground.alive)
+				{	
+					_tripBackground.beginFade();
+					_baseBackground.reset(165, -450);
+				}
 				playerCollectibleOverlap(_player, _c);
 			}
 		}
@@ -162,12 +178,10 @@ class PlayState extends FlxState
 		//Give the collectible a random horizontal and vertical velocity, and decrease the alpha of the collectible
 		FlxTween.tween(collectible, { alpha: 0, x: collectible.x + _RNG.float(-20,20), y: collectible.y + _RNG.float(-2,-20)}, .75);
 		
-		//Possible Juice: Change the candy sprite to a wrapper
-		
 		//Give the fading away collectible a random velocity, release particles, and play a sound
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
 		_playerParticleSys.releaseParticles(5);
-		
+		collectible.loadGraphic(AssetPaths.empty_wrapper__png, false, 29, 29);
 		FlxG.sound.play(AssetPaths.collectible__wav);
 		
 		//Remove collision from the collectible so that Overlap is not triggered
@@ -198,4 +212,14 @@ class PlayState extends FlxState
 		_c.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
 		add(_c);
 	}
+	
+	/**
+	* Spawn a collectible at the position of the spawner after a certain time frame
+	*
+	* @param    t: Functions that are called by a timer need a timer as an arg
+	* */
+	private function reloadScene(t:FlxTimer):Void
+	{
+		FlxG.switchState(new PlayState());
+	}	
 }
