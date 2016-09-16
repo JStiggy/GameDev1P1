@@ -18,6 +18,7 @@ import flixel.system.FlxSound;
 class PlayState extends FlxState
 {
 	private var _incre:Float=0;
+	private var _EGroup:FlxTypedGroup<Explode>;
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
@@ -282,3 +283,4 @@ class PlayState extends FlxState
 		FlxG.switchState(new PlayState());
 	}	
 }
+
