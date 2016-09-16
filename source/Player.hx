@@ -31,7 +31,7 @@ class Player extends FlxSprite
 		setFacingFlip(FlxObject.LEFT, true,false);
 		setFacingFlip(FlxObject.RIGHT, false, false);
 		animation.add("lr", [0, 1, 2], 6, false);
-		animation.add("idle", [7, 8], 6, true);
+		animation.add("idle", [7, 8], 2, true);
 		animation.add("jump", [4, 5], 2, true);
 	}
 	

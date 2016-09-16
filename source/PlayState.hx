@@ -33,7 +33,9 @@ class PlayState extends FlxState
 	private var _scrollbackgroundGroup:FlxTypedGroup<FlxSprite>; //Contains all the scrolling backgrounds
 	private var _spawner:Spawner; //Used to spawn collectibles
 	private var _timer:FlxTimer; //Time between spawns
-	private var _musicPlayer:FlxSound;
+	private var _musicPlayer:FlxSound; //Used to play music, has the ability to fade the music in and out
+	private var _startCandy:Collectible;
+	private var _title:TitleScreen;
 	
 	override public function create():Void
 	{
@@ -44,7 +46,6 @@ class PlayState extends FlxState
 		FlxG.timeScale = 1;
 
 		_RNG = new FlxRandom();
-		
 		//Backgrounds
 		_baseBackground = new FlxSprite(0, 0);
 		_baseBackground.loadGraphic(AssetPaths.background01__png, false, 640, 1308);
@@ -55,6 +56,20 @@ class PlayState extends FlxState
 		
 		_tripBackground = new TripBackground();
 		add(_tripBackground);
+		
+		_title = new TitleScreen(0, 0);
+		add(_title);
+		
+		//570,395
+		var _creep:FlxSprite = new FlxSprite(570, 395);
+		_creep.loadGraphic(AssetPaths.candyman__png,false);
+		_creep.scale.set(2.5, 2.5);
+		
+		add(_creep);
+		_startCandy = new Collectible(500, 395);
+		_startCandy.acceleration.y = 0;
+		_startCandy.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
+		add(_startCandy);
 		
 		_scrollbackgroundGroup = new FlxTypedGroup<FlxSprite>();
 		add(_scrollbackgroundGroup);
@@ -88,6 +103,8 @@ class PlayState extends FlxState
 		//Create a group to conatain all the collectibles, used for collsion detection
 		_collectibleGroup = new FlxTypedGroup<Collectible>();
 		add(_collectibleGroup);
+
+		_collectibleGroup.add(_startCandy);
 		
 		//Setup the display for the score, Scrollfactor is set to zero
 		_scoreText = new FlxText(10, 10, 50, Std.string(_score), 18);
@@ -96,13 +113,14 @@ class PlayState extends FlxState
 		
 		//Create a timer that spawns a collectible every .5 seconds
 		_timer = new FlxTimer();
-		_timer.start(.5, spawnCollectible, 0);
-		
+
 		//Start the music for the scene
 		_musicPlayer = new FlxSound();
 		_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
 		_musicPlayer.play();
 		_musicPlayer.fadeIn(1.5, 0, .5);
+		
+		
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
@@ -112,9 +130,21 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float):Void
 	{
-		
 		scoreTally(elapsed);
 		
+		//This will only occur for a single update after the player has gained the start candy
+		if (_score == 10 && _timer.time != .5){
+			_title.startDestroy();
+			_timer.start(.5, spawnCollectible, 0);
+		}
+		//Prevents the camera from scrolling until the star candy has been collected
+		if(_timer.time != 0)
+		{
+					//Lerp the camer to the player location using a predefined offset
+			FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
+		}
+		
+		//Check to see if the player has reached a certain threshold before moving the background up to it's next position
 		for (_bg in _scrollbackgroundGroup)
 		{
 			if (_player.y < _bg.y-944*1.5)
@@ -126,7 +156,7 @@ class PlayState extends FlxState
 		}
 		
 		
-		
+		//Kill the player should they fall to  acertain heigh threshold
 		_killHeight = Math.min(_killHeight, _player.y + 480);
 		if (_killHeight <= _player.y && _timer.time == .5){
 			_timer.start(1, reloadScene, 1);
@@ -134,10 +164,7 @@ class PlayState extends FlxState
 			FlxG.camera.fade(FlxColor.WHITE, 1, false);
 		}
 		
-		//Lerp the camer to the player location using a predefined offset
-		FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
 		FlxG.collide(_player, _floor);
-		
 		
 		//FlxG.overlap is not accurate enough when rotation and speed are used, instead pixel perfect overlap is used
 		for (_c in _collectibleGroup)
@@ -145,10 +172,12 @@ class PlayState extends FlxState
 			//If the collectible is considered dead remove from the group and destroy, 
 			//does not call the collision code in this case
 			if (!_c.alive){
+				
 				_collectibleGroup.remove(_c);
 				_c.destroy();
 				continue;
 			}
+			
 			
 			//Check for overlap between the collectible and player
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
