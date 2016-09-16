@@ -1,4 +1,5 @@
 package;
+
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
 import flixel.tweens.FlxTween;
@@ -12,6 +13,7 @@ import flixel.ui.FlxButton;
 import flixel.math.FlxMath;
 import flixel.math.FlxRandom;
 import flixel.util.FlxTimer;
+import flixel.system.FlxSound;
 
 class PlayState extends FlxState
 {
@@ -25,12 +27,13 @@ class PlayState extends FlxState
 	private var _RNG:FlxRandom; //Random number generator
 	private var _scoreText:FlxText; //If a hud is created this shhould be moved into that class
 	private var _killHeight:Float = 1000; //When the player falls to this height, the player will lose the current round
-	private var bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
+	private var _bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
 	private var _baseBackground:FlxSprite; //Background after collecting a collectible
 	private var _tripBackground:TripBackground; //Transitional background used before _baseBackground
 	private var _scrollbackgroundGroup:FlxTypedGroup<FlxSprite>; //Contains all the scrolling backgrounds
 	private var _spawner:Spawner; //Used to spawn collectibles
 	private var _timer:FlxTimer; //Time between spawns
+	private var _musicPlayer:FlxSound;
 	
 	override public function create():Void
 	{
@@ -45,15 +48,13 @@ class PlayState extends FlxState
 		//Backgrounds
 		_baseBackground = new FlxSprite(0, 0);
 		_baseBackground.loadGraphic(AssetPaths.background01__png, false, 640, 1308);
-		_baseBackground.scale.set(bgSF, bgSF);
+		_baseBackground.scale.set(_bgSF, _bgSF);
 		_baseBackground.setPosition(165, -500);
 		add(_baseBackground);
 		_baseBackground.kill();
 		
 		_tripBackground = new TripBackground();
 		add(_tripBackground);
-		
-
 		
 		_scrollbackgroundGroup = new FlxTypedGroup<FlxSprite>();
 		add(_scrollbackgroundGroup);
@@ -62,7 +63,7 @@ class PlayState extends FlxState
 		{
 			var _bg:FlxSprite = new FlxSprite(0, 0);
 			_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 1)) + ".png", false, 640, 1308);
-			_bg.scale.set(bgSF, bgSF);
+			_bg.scale.set(_bgSF, _bgSF);
 			_bg.setPosition(165, -450 - 944 * i);
 			add(_bg);
 			_scrollbackgroundGroup.add(_bg);
@@ -75,7 +76,7 @@ class PlayState extends FlxState
 		_floor.solid = true;
 		_floor.elasticity = 0.8;
 		add(_floor);
-		
+				
 		//Create the player and particle system actor
 		_player = new Player(FlxG.width/2, _floor.y-64);
 		_spawner = new Spawner(FlxG.width/2, 0, _player);
@@ -98,7 +99,10 @@ class PlayState extends FlxState
 		_timer.start(.5, spawnCollectible, 0);
 		
 		//Start the music for the scene
-		FlxG.sound.playMusic(AssetPaths.rock_candy__ogg, .01, true);
+		_musicPlayer = new FlxSound();
+		_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
+		_musicPlayer.play();
+		_musicPlayer.fadeIn(1.5, 0, .5);
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
@@ -116,16 +120,18 @@ class PlayState extends FlxState
 			if (_player.y < _bg.y-944*1.5)
 			{
 				_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 2)) + ".png", false, 640, 1308);
-				_bg.scale.set(bgSF,bgSF);
+				_bg.scale.set(_bgSF,_bgSF);
 				_bg.setPosition(_bg.x, _bg.y - 944 * 3);
 			}
 		}
 		
+		
+		
 		_killHeight = Math.min(_killHeight, _player.y + 480);
 		if (_killHeight <= _player.y && _timer.time == .5){
 			_timer.start(1, reloadScene, 1);
+			_musicPlayer.fadeIn(1, .5, 0);
 			FlxG.camera.fade(FlxColor.WHITE, 1, false);
-			//FlxG.switchState(new PlayState());
 		}
 		
 		//Lerp the camer to the player location using a predefined offset
@@ -176,8 +182,7 @@ class PlayState extends FlxState
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
 		_playerParticleSys.releaseParticles(5);
 		collectible.loadGraphic(AssetPaths.empty_wrapper__png, false, 29, 29);
-		FlxG.sound.play(AssetPaths.collectible__wav);
-		
+		FlxG.sound.play(AssetPaths.collectible__wav,.5);
 		//Remove collision from the collectible so that Overlap is not triggered
 		collectible.solid = false;
 	}
