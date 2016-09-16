@@ -24,16 +24,11 @@ class PlayState extends FlxState
 	private var _playerParticleSys:ModParticleSystem; //Particle system used when getting a collectible
 	private var _RNG:FlxRandom; //Random number generator
 	private var _scoreText:FlxText; //If a hud is created this shhould be moved into that class
-	
 	private var _killHeight:Float = 1000; //When the player falls to this height, the player will lose the current round
-	
 	private var bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
-	private var _baseBackground:FlxSprite;
-	private var _tripBackground:TripBackground;
-	
-	private var _scrollbackgroundGroup:FlxTypedGroup<FlxSprite>;
-	
-	//Can be compartmentalized into own class using FlxG.state.add
+	private var _baseBackground:FlxSprite; //Background after collecting a collectible
+	private var _tripBackground:TripBackground; //Transitional background used before _baseBackground
+	private var _scrollbackgroundGroup:FlxTypedGroup<FlxSprite>; //Contains all the scrolling backgrounds
 	private var _spawner:Spawner; //Used to spawn collectibles
 	private var _timer:FlxTimer; //Time between spawns
 	
@@ -65,7 +60,6 @@ class PlayState extends FlxState
 		
 		for (i in 1 ... 4)
 		{
-			_score+= i;
 			var _bg:FlxSprite = new FlxSprite(0, 0);
 			_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 1)) + ".png", false, 640, 1308);
 			_bg.scale.set(bgSF, bgSF);
