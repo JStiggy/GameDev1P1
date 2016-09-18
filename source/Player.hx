@@ -5,6 +5,7 @@ import flixel.util.FlxColor;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.addons.effects.FlxTrail;
 import Std;
 
 /**
@@ -13,6 +14,7 @@ import Std;
  */
 class Player extends FlxSprite
 {
+	public var canMove:Bool = true;
 	
 	public function new(X:Float=0, Y:Float=0) 
 	{
@@ -21,9 +23,8 @@ class Player extends FlxSprite
 		this.scale.set(2, 2);
 		this.centerOrigin();
 		this.updateHitbox();
-		this.maxVelocity.set(200, 450);
-		
-		this.acceleration.y = 300;
+		this.maxVelocity.set(300, 500);
+		this.acceleration.y = 450;
 		
 		this.drag.x = this.maxVelocity.x * 4;	
 		
@@ -32,14 +33,18 @@ class Player extends FlxSprite
 		setFacingFlip(FlxObject.RIGHT, false, false);
 		animation.add("lr", [0, 1, 2], 6, false);
 		animation.add("idle", [7, 8], 2, true);
-		animation.add("jump", [4, 5], 2, true);
+		animation.add("jump", [4, 5], 8, true);
 	}
 	
 	override public function update(elapsed:Float):Void
 	{
-		
-		
 		this.acceleration.x = 0;
+		
+		if (!canMove)
+		{
+			super.update(elapsed);
+			return;
+		}
 		
 		if (FlxG.keys.anyPressed([LEFT, A]))
 		{
@@ -69,6 +74,7 @@ class Player extends FlxSprite
 		//Play the proper animation for the player
 		if ( Math.abs(velocity.x) < .1 && !(touching == FlxObject.NONE))
 		{
+			
 			animation.play("idle");
 			
 		}
@@ -82,7 +88,7 @@ class Player extends FlxSprite
 		}
 		
 		//Prevent the player from falling off the sides of the screen horizontally
-		if (x<0+width/2){
+		if (x < 0 + width / 2){
 			x = width/2;
 		}
 		else if (x > FlxG.camera.width - width / 2 - 50)

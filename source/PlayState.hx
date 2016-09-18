@@ -19,6 +19,7 @@ class PlayState extends FlxState
 {
 	private var _incre:Float=0;
 	private var _EGroup:FlxTypedGroup<Explode>;
+	
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
@@ -36,8 +37,7 @@ class PlayState extends FlxState
 	private var _spawner:Spawner; //Used to spawn collectibles
 	private var _timer:FlxTimer; //Time between spawns
 	private var _musicPlayer:FlxSound; //Used to play music, has the ability to fade the music in and out
-	private var _startCandy:Collectible;
-	private var _title:TitleScreen;
+	private var _title:TitleScreen; //Handle all intro content
 	
 	override public function create():Void
 	{
@@ -62,16 +62,12 @@ class PlayState extends FlxState
 		_title = new TitleScreen(0, 0);
 		add(_title);
 		
-		//570,395
+		
 		var _creep:FlxSprite = new FlxSprite(570, 395);
 		_creep.loadGraphic(AssetPaths.candyman__png,false);
 		_creep.scale.set(2.5, 2.5);
 		
 		add(_creep);
-		_startCandy = new Collectible(500, 395);
-		_startCandy.acceleration.y = 0;
-		_startCandy.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
-		add(_startCandy);
 		
 		_scrollbackgroundGroup = new FlxTypedGroup<FlxSprite>();
 		add(_scrollbackgroundGroup);
@@ -105,10 +101,9 @@ class PlayState extends FlxState
 		//Create a group to conatain all the collectibles, used for collsion detection
 		_collectibleGroup = new FlxTypedGroup<Collectible>();
 		add(_collectibleGroup);
+		
 		_EGroup = new FlxTypedGroup<Explode>();
 		add(_EGroup);
-		
-		_collectibleGroup.add(_startCandy);
 		
 		//Setup the display for the score, Scrollfactor is set to zero
 		_scoreText = new FlxText(10, 10, 50, Std.string(_score), 18);
@@ -117,14 +112,15 @@ class PlayState extends FlxState
 		
 		//Create a timer that spawns a collectible every .5 seconds
 		_timer = new FlxTimer();
-
+		
 		//Start the music for the scene
 		_musicPlayer = new FlxSound();
 		_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
 		_musicPlayer.play();
 		_musicPlayer.fadeIn(1.5, 0, .5);
 		
-		
+		_title.player = _player;
+		_title.creep = _creep;
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
@@ -137,14 +133,16 @@ class PlayState extends FlxState
 		scoreTally(elapsed);
 		
 		//This will only occur for a single update after the player has gained the start candy
-		if (_score == 10 && _timer.time != .5){
-			_title.startDestroy();
+		if (_title.storySection == 3){
+			_tripBackground.beginFade();
+			_baseBackground.reset(165, -450);
+			_title.storySection = 4;
 			_timer.start(.5, spawnCollectible, 0);
 		}
 		//Prevents the camera from scrolling until the star candy has been collected
-		if(_timer.time != 0)
+		if(_title.storySection == 4)
 		{
-					//Lerp the camer to the player location using a predefined offset
+			//Lerp the camer to the player location using a predefined offset
 			FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
 		}
 		
@@ -164,8 +162,8 @@ class PlayState extends FlxState
 		_killHeight = Math.min(_killHeight, _player.y + 480);
 		if (_killHeight <= _player.y && _timer.time == .5){
 			_timer.start(1, reloadScene, 1);
-			_musicPlayer.fadeIn(1, .5, 0);
-			FlxG.camera.fade(FlxColor.WHITE, 1, false);
+			_musicPlayer.fadeOut(.5, 0);
+			FlxG.camera.fade(FlxColor.WHITE, .5, false);
 		}
 		
 		FlxG.collide(_player, _floor);
@@ -186,14 +184,11 @@ class PlayState extends FlxState
 			//Check for overlap between the collectible and player
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
 			{
-				if (!_baseBackground.alive)
-				{	
-					_tripBackground.beginFade();
-					_baseBackground.reset(165, -450);
-				}
 				playerCollectibleOverlap(_player, _c);
 			}
 		}
+		
+		
 		for (_e in _EGroup)
 		{
 			if (FlxG.pixelPerfectOverlap(_player, _e, 255)==false)
@@ -228,8 +223,9 @@ class PlayState extends FlxState
 	{	
 		_score += 10;
 		_player.velocity.y = -player.maxVelocity.y * 1.4;
+		
 		//Give the collectible a random horizontal and vertical velocity, and decrease the alpha of the collectible
-		FlxTween.tween(collectible, { alpha: 0, x: collectible.x + _RNG.float(-20,20), y: collectible.y + _RNG.float(-2,-20)}, .75);
+		FlxTween.tween(collectible, { alpha: 0, x: collectible.x + _RNG.float( -20, 20), y: collectible.y + _RNG.float( -2, -20)}, .75);
 		
 		//Give the fading away collectible a random velocity, release particles, and play a sound
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);

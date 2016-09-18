@@ -20,7 +20,7 @@ class Spawner extends FlxObject
 		super(X, Y, 32, 32);
 		_player = _p;
 		_RNG = new FlxRandom(21);
-		_xRange = 50;
+		_xRange = 100;
 	}
 
 	public function moveSpawner() {
