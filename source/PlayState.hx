@@ -75,7 +75,7 @@ class PlayState extends FlxState
 		for (i in 1 ... 4)
 		{
 			var _bg:FlxSprite = new FlxSprite(0, 0);
-			_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 1)) + ".png", false, 640, 1308);
+			_bg.loadGraphic("assets/images/Backgrounds/repeating_sky" + Std.string(_RNG.int(1, 1)) + ".png", false, 640, 1308);
 			_bg.scale.set(_bgSF, _bgSF);
 			_bg.setPosition(165, -450 - 944 * i);
 			add(_bg);
@@ -151,7 +151,18 @@ class PlayState extends FlxState
 		{
 			if (_player.y < _bg.y-944*1.5)
 			{
-				_bg.loadGraphic("assets/images/Backgrounds/repeating_sky0" + Std.string(_RNG.int(1, 2)) + ".png", false, 640, 1308);
+				var bgNumber = _RNG.int(1, Std.int( Math.min( 11, 1 + _score % 200 )));
+				_bg.loadGraphic("assets/images/Backgrounds/repeating_sky" + Std.string (bgNumber) + ".png", true, 311, 459);
+				if (bgNumber == 5)
+				{
+					_bg.animation.add("anim", [0, 1, 2], 5, true);
+					_bg.animation.play("anim");
+				}
+				else
+				{
+					_bg.animation.stop();
+				}
+
 				_bg.scale.set(_bgSF,_bgSF);
 				_bg.setPosition(_bg.x, _bg.y - 944 * 3);
 			}
@@ -254,6 +265,7 @@ class PlayState extends FlxState
 	* */
 	private function spawnCollectible(t:FlxTimer):Void
 	{
+		_spawner.score = _score;
 		_spawner.moveSpawner();
 		var _c:Collectible = new Collectible(_spawner.x,_spawner.y);
 		_collectibleGroup.add(_c);

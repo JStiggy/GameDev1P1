@@ -14,6 +14,7 @@ class Spawner extends FlxObject
 	private var _xRange:Float; //The horizontal range the spawner will move after spawning a candy
 	private var _player:Player;
 	private var _RNG:FlxRandom;
+	public var score:Float;
 	
 	public function new(X:Float, Y:Float, _p:Player) 
 	{
@@ -29,7 +30,7 @@ class Spawner extends FlxObject
 		var _x:Float = 0;
 
 		do {
-			_x = _xRange * _RNG.int( -1, 1, [0]);
+			_x = Math.min(_xRange + score / 5, 200) * _RNG.int( -1, 1, [0]);
 			_x += this.x;
 			
 		} while (_x < 50 || _x > 590);
