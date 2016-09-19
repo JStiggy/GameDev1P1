@@ -47,7 +47,12 @@ class TripBackground extends FlxSprite
 	{
 		_startEffect = true;
 		_effectSprite.setPosition(165, -502);
+		
+		//HTML5 cannot play the rainbow effect. as a result do not activate the effect for HTML5
+		#if neko
 		FlxG.state.add(_effectSprite);
+		#end
+		
 		this.alpha = 0;
 	}
 	

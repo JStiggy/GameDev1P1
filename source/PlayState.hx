@@ -211,13 +211,16 @@ class PlayState extends FlxState
 			if (FlxG.pixelPerfectOverlap(_player, _e, 255) && _player.velocity.y<0)
 			{
 				_e._overlap=true;
-				_player.velocity.y+=1000;
+				_player.velocity.y += 1000;
+				FlxG.sound.play(AssetPaths.platformhit__wav, .5);
+
 			}
 			
 			else if (FlxG.pixelPerfectOverlap(_player, _e, 255)&&_player.velocity.y>=0)
 			{
 				_e._overlap=true;
-				_player.velocity.y-=1000;
+				_player.velocity.y -= 1000;
+				FlxG.sound.play(AssetPaths.platformhit__wav, .5);
 			}
 		}
 		
@@ -242,7 +245,7 @@ class PlayState extends FlxState
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
 		_playerParticleSys.releaseParticles(5);
 		collectible.loadGraphic(AssetPaths.empty_wrapper__png, false, 29, 29);
-		FlxG.sound.play(AssetPaths.collectible__wav,.5);
+		FlxG.sound.play(AssetPaths.candyget__wav,.5);
 		//Remove collision from the collectible so that Overlap is not triggered
 		collectible.solid = false;
 	}
@@ -271,6 +274,7 @@ class PlayState extends FlxState
 		_collectibleGroup.add(_c);
 		_c.angularVelocity = _RNG.float(20,65) * _RNG.int(-1,1,[0]);
 		add(_c);
+		
 		if(_spawner.y - _incre<=-500){
 			var _e:Explode = new Explode(_spawner.x + _RNG.int(-1,1,[0])*65,_spawner.y);
 			

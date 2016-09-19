@@ -24,7 +24,7 @@ class TitleScreen extends FlxObject
 	{
 		super(X, Y, Width, Height);
 		_titleSplash = new FlxSprite(0, 0);
-		_titleSplash.makeGraphic(400, 200);
+		_titleSplash.loadGraphic(AssetPaths.title__png, 400, 200);
 		_titleSplash.screenCenter();
 		_titleSplash.y -= 25;
 		FlxG.state.add(_titleSplash);
