@@ -45,6 +45,19 @@ class Player extends FlxSprite
 			super.update(elapsed);
 			return;
 		}
+		//This is for demoing purposes
+		if (FlxG.keys.anyPressed([O]))
+		{
+			this.acceleration.y = 0;			
+			this.velocity.y -= 20;
+		}
+		
+		//This is for demoing purposes
+		if (FlxG.keys.anyPressed([I]))
+		{
+			this.acceleration.y = 450;
+			this.velocity.y = 0;
+		}
 		
 		if (FlxG.keys.anyPressed([LEFT, A]))
 		{

@@ -21,7 +21,7 @@ class Explode extends FlxSprite {
 		_Oy=Y;
 		super(X, Y);
 		_killHeight = Y + 1200;
-		this.loadGraphic(AssetPaths.platform_pink__png, false, 96, 16);
+		this.loadGraphic(AssetPaths.pink_platform__png, false, 96, 29);
 		
 	}
 	

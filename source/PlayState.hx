@@ -47,10 +47,10 @@ class PlayState extends FlxState
 		//Load HigfhScore data
 		var _gameSave:FlxSave = new FlxSave();
 		_gameSave.bind("HighScore"); 
-		//Uncomment this line to allow Highscores to save between playthroughs
-		//_gameSave.data.hScore = Math.max (0, _gameSave.data.hScore);
-		//This version wipes HighScpores between play sessions, useful for demoing
-		_gameSave.data.hScore = 0;
+		//This verion allows Highscores to save between playthroughs
+		_gameSave.data.hScore = Math.max (0, _gameSave.data.hScore);
+		//This version wipes HighScpores between rounds, useful for demoing
+		//_gameSave.data.hScore = 0;
 		_gameSave.flush();
 		_hScore = _gameSave.data.hScore;
 		//Disable the mouse
@@ -104,7 +104,7 @@ class PlayState extends FlxState
 		//Create the player and particle system actor
 		_player = new Player(FlxG.width/2, _floor.y-64);
 		_spawner = new Spawner(FlxG.width/2, 0, _player);
-		_playerParticleSys = new ModParticleSystem(_player, "candy_particle.png", 0);
+		_playerParticleSys = new ModParticleSystem(_player, "particle.png", 0);
 		add(_playerParticleSys); //Particle system is added first so renders after the System
 		add(_spawner);
 		add(_player);
@@ -134,7 +134,7 @@ class PlayState extends FlxState
 		
 		//Start the music for the scene
 		_musicPlayer = new FlxSound();
-		_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
+		_musicPlayer.loadEmbedded(AssetPaths.slow_candy__ogg, true);
 		_musicPlayer.play();
 		_musicPlayer.fadeIn(1.5, 0, .5);
 		
@@ -161,7 +161,7 @@ class PlayState extends FlxState
 			_timer.start(.5, spawnCollectible, 0);
 		}
 		//Prevents the camera from scrolling until the star candy has been collected
-		if(_title.storySection == 4)
+		if(_title.storySection >= 4)
 		{
 			//Lerp the camer to the player location using a predefined offset
 			FlxG.camera.scroll.y = FlxMath.lerp(FlxG.camera.scroll.y, _player.y-_cameraOffset, .45);
@@ -186,6 +186,9 @@ class PlayState extends FlxState
 
 				_bg.scale.set(_bgSF,_bgSF);
 				_bg.setPosition(_bg.x, _bg.y - 944 * 3);
+				
+				spawnBackgroundObject();
+				
 			}
 		}
 		
@@ -193,6 +196,7 @@ class PlayState extends FlxState
 		//Kill the player should they fall to  acertain heigh threshold
 		_killHeight = Math.min(_killHeight, _player.y + 480);
 		if (_killHeight <= _player.y && _timer.time == .5){
+			_title.storySection++;
 			_timer.start(1, switchScene, 1);
 			_musicPlayer.fadeOut(.5, 0);
 			FlxG.camera.fade(FlxColor.BLACK, .5, false);
@@ -212,10 +216,22 @@ class PlayState extends FlxState
 				continue;
 			}
 			
+			if (_title.storySection  >= 6)
+			{
+				FlxTween.tween(_c, {alpha: 0}, .25);
+				continue;
+			}
 			
 			//Check for overlap between the collectible and player
 			if (FlxG.pixelPerfectOverlap(_player, _c, 255))
 			{
+				if (_title.storySection == 4)
+				{
+					_title.storySection++;
+					_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
+					_musicPlayer.play();
+				}
+				
 				playerCollectibleOverlap(_player, _c);
 			}
 		}
@@ -223,6 +239,12 @@ class PlayState extends FlxState
 		
 		for (_e in _EGroup)
 		{
+			if (_title.storySection  >= 6)
+			{
+				FlxTween.tween(_e, {alpha: 0}, .25);
+				continue;
+			}
+			
 			if (FlxG.pixelPerfectOverlap(_player, _e, 255)==false)
 			{
 				_e._overlap=false;
@@ -266,7 +288,7 @@ class PlayState extends FlxState
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
 		_playerParticleSys.releaseParticles(.1 ,5);
 		collectible.loadGraphic(AssetPaths.empty_wrapper__png, false, 29, 29);
-		FlxG.sound.play(AssetPaths.candyget__wav,.5);
+		FlxG.sound.play(AssetPaths.candyget__wav,.25);
 		//Remove collision from the collectible so that Overlap is not triggered
 		collectible.solid = false;
 	}
@@ -307,6 +329,26 @@ class PlayState extends FlxState
 	}
 	
 	/**
+	* Roll to spawn an object in the background
+	* */
+	private function spawnBackgroundObject():Void
+	{
+		var _roll = _RNG.int(0, 100);
+		if (_roll > 90)
+		{
+			//Creep rain
+			var _bgo:BackgroundObject = new BackgroundObject(_player);
+			add(_bgo);
+		}
+		else if (_roll >65)
+		{
+			//Background Objects
+			var _bgo:BackgroundObject = new BackgroundObject(_player);
+			add(_bgo);
+		}
+	}
+	
+	/**
 	* Reload scene after a set time
 	*
 	* @param    t: Functions that are called by a timer need a timer as an arg
@@ -318,7 +360,7 @@ class PlayState extends FlxState
 		_gameSave.data.hScore = Math.max (_score, _hScore );
 		_gameSave.data.score = _score;
 		_gameSave.flush();
+		_musicPlayer.destroy();
 		FlxG.switchState(new GameOverState());
 	}	
 }
-

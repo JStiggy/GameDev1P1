@@ -1,5 +1,6 @@
 package;
 
+import flixel.system.FlxSound;
 import flixel.util.FlxColor;
 import flixel.FlxObject;
 import flixel.text.FlxText;
@@ -25,12 +26,18 @@ class GameOverState extends FlxState
 	private var _sysObj2:FlxObject;
 	private var _particleSys1:ModParticleSystem;
 	private var _particleSys2:ModParticleSystem;
+	private var _musicPlayer:FlxSound;
+	
 	override public function create():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK,1,true);
 		_gameSave = new FlxSave();
 		_gameSave.bind("HighScore"); 
-			
+		_musicPlayer = new FlxSound();
+		_musicPlayer.loadEmbedded(AssetPaths.slow_candy__ogg, true);
+		_musicPlayer.play();
+		_musicPlayer.fadeIn(1.5, 0, .5);
+		
 		var _baseBackground:FlxSprite = new FlxSprite(0, 0);
 		_baseBackground.loadGraphic(AssetPaths.background01__png, false, 640, 1308);
 		_baseBackground.scale.set(2.05787, 2.05787);
@@ -112,6 +119,7 @@ class GameOverState extends FlxState
 	
 	private function switchScene():Void
 	{
+		_musicPlayer.destroy();
 		FlxG.switchState(new PlayState());
 	}
 	
