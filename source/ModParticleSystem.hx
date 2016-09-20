@@ -4,6 +4,7 @@ import flixel.math.FlxMath;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.FlxSprite;
+import flixel.FlxObject;
 /**
  * Generate a user defined particle effects at a location of _attachedObject, with velocity opposite of the current velocity.
  * @author John Steigerwald
@@ -12,7 +13,7 @@ class ModParticleSystem extends FlxEmitter
 {
 	
 	private var _cooldown:Int;
-	private var _attachedObject:FlxSprite;
+	private var _attachedObject:FlxObject;
 	private var _sysType:Int;
 	
 	/**
@@ -21,7 +22,7 @@ class ModParticleSystem extends FlxEmitter
 	 * @param   _fileName: Name of sprite to be used for the particle system
 	 * @param   _sysType: 0 = Trail, 1 = No trail, manual calls with release particle system
 	 */
-	public function new( _obj:FlxSprite, _fileName:String, _sysT:Int) 
+	public function new( _obj:FlxObject, _fileName:String, _sysT:Int) 
 	{
 		super(_obj.x, _obj.y);
 		_cooldown = 0;
@@ -54,9 +55,9 @@ class ModParticleSystem extends FlxEmitter
 	 * Instantiate a new particle system at the location of _obj.
 	 * @param	_obj: Object that the particle system will follow around the scene.
 	*/
-	public function releaseParticles(_count:Int):Void
+	public function releaseParticles(time, _count:Int):Void
 	{
-		this.start(false, .01, _count);
+		this.start(false, time, _count);
 	}
 	
 	public override function update(elapsed:Float):Void

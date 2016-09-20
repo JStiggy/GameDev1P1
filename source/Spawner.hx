@@ -25,8 +25,6 @@ class Spawner extends FlxObject
 	}
 
 	public function moveSpawner() {
-		FlxG.log.redirectTraces = true;
-
 		var _x:Float = 0;
 
 		do {

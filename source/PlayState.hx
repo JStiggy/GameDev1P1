@@ -14,12 +14,14 @@ import flixel.math.FlxMath;
 import flixel.math.FlxRandom;
 import flixel.util.FlxTimer;
 import flixel.system.FlxSound;
+import flixel.util.FlxSave;
 
 class PlayState extends FlxState
 {
 	private var _incre:Float=0;
 	private var _EGroup:FlxTypedGroup<Explode>;
 	
+	private var _hScore:Float; //High Score fp the current session
 	private var _score:Float = 0; //Actual hard score value, used with _DisplayScore for lerp
 	private var _displayScore:Float = 0; //Score that is being displayed on screen
 	private var _player:Player; 
@@ -28,7 +30,8 @@ class PlayState extends FlxState
 	private var _cameraOffset:Int = 300; //Offset for postioning the camera in reagrds to the player
 	private var _playerParticleSys:ModParticleSystem; //Particle system used when getting a collectible
 	private var _RNG:FlxRandom; //Random number generator
-	private var _scoreText:FlxText; //If a hud is created this shhould be moved into that class
+	private var _scoreText:FlxText;
+	private var _hScoreText:FlxText;
 	private var _killHeight:Float = 1000; //When the player falls to this height, the player will lose the current round
 	private var _bgSF:Float = 2.05787; //The scaling factor needed for backgrounds to fit on the screen
 	private var _baseBackground:FlxSprite; //Background after collecting a collectible
@@ -41,6 +44,15 @@ class PlayState extends FlxState
 	
 	override public function create():Void
 	{
+		//Load HigfhScore data
+		var _gameSave:FlxSave = new FlxSave();
+		_gameSave.bind("HighScore"); 
+		//Uncomment this line to allow Highscores to save between playthroughs
+		//_gameSave.data.hScore = Math.max (0, _gameSave.data.hScore);
+		//This version wipes HighScpores between play sessions, useful for demoing
+		_gameSave.data.hScore = 0;
+		_gameSave.flush();
+		_hScore = _gameSave.data.hScore;
 		//Disable the mouse
 		FlxG.mouse.visible = false;
 	
@@ -55,23 +67,22 @@ class PlayState extends FlxState
 		_baseBackground.setPosition(165, -500);
 		add(_baseBackground);
 		_baseBackground.kill();
-		
 		_tripBackground = new TripBackground();
 		add(_tripBackground);
 		
+		//Set up the titlescreen
 		_title = new TitleScreen(0, 0);
 		add(_title);
 		
-		
+		//Add the creepy candy dealer to the scene
 		var _creep:FlxSprite = new FlxSprite(570, 395);
 		_creep.loadGraphic(AssetPaths.candyman__png,false);
 		_creep.scale.set(2.5, 2.5);
-		
 		add(_creep);
 		
+		//Intialize the scrolling backgrounds for game play
 		_scrollbackgroundGroup = new FlxTypedGroup<FlxSprite>();
 		add(_scrollbackgroundGroup);
-		
 		for (i in 1 ... 4)
 		{
 			var _bg:FlxSprite = new FlxSprite(0, 0);
@@ -106,9 +117,17 @@ class PlayState extends FlxState
 		add(_EGroup);
 		
 		//Setup the display for the score, Scrollfactor is set to zero
-		_scoreText = new FlxText(10, 10, 50, Std.string(_score), 18);
+		_scoreText = new FlxText(10, 10, 400, Std.string(_score), 18);
 		_scoreText.scrollFactor.x = _scoreText.scrollFactor.y = 0;
-		add(_scoreText);
+		_scoreText.setFormat(null, 18, FlxColor.BLACK);
+		_scoreText.setBorderStyle(OUTLINE, FlxColor.WHITE, 2);
+
+		_hScoreText = new FlxText(10, 30, 400, Std.string(_score), 18);
+		_hScoreText.scrollFactor.x = _hScoreText.scrollFactor.y = 0;
+		_hScoreText.text = "High Score: " + Std.string(_hScore);
+		_hScoreText.setFormat(null, 18, FlxColor.BLACK);
+		_hScoreText.setBorderStyle(OUTLINE, FlxColor.WHITE, 2);
+		
 		
 		//Create a timer that spawns a collectible every .5 seconds
 		_timer = new FlxTimer();
@@ -124,7 +143,7 @@ class PlayState extends FlxState
 		
 		//Start the camera off at the player
 		FlxG.camera.scroll.y = _player.y - _cameraOffset;
-		FlxG.camera.fade(FlxColor.WHITE, 2, true);
+		FlxG.camera.fade(FlxColor.BLACK, 2, true);
 		super.create();
 	}
 
@@ -134,6 +153,8 @@ class PlayState extends FlxState
 		
 		//This will only occur for a single update after the player has gained the start candy
 		if (_title.storySection == 3){
+			add(_scoreText);
+			add(_hScoreText);
 			_tripBackground.beginFade();
 			_baseBackground.reset(165, -450);
 			_title.storySection = 4;
@@ -151,7 +172,7 @@ class PlayState extends FlxState
 		{
 			if (_player.y < _bg.y-944*1.5)
 			{
-				var bgNumber = _RNG.int(1, Std.int( Math.min( 11, 1 + _score % 200 )));
+				var bgNumber = _RNG.int(1, Std.int( Math.min( 10, 1 + _score % 200 )));
 				_bg.loadGraphic("assets/images/Backgrounds/repeating_sky" + Std.string (bgNumber) + ".png", true, 311, 459);
 				if (bgNumber == 5)
 				{
@@ -172,9 +193,9 @@ class PlayState extends FlxState
 		//Kill the player should they fall to  acertain heigh threshold
 		_killHeight = Math.min(_killHeight, _player.y + 480);
 		if (_killHeight <= _player.y && _timer.time == .5){
-			_timer.start(1, reloadScene, 1);
+			_timer.start(1, switchScene, 1);
 			_musicPlayer.fadeOut(.5, 0);
-			FlxG.camera.fade(FlxColor.WHITE, .5, false);
+			FlxG.camera.fade(FlxColor.BLACK, .5, false);
 		}
 		
 		FlxG.collide(_player, _floor);
@@ -243,7 +264,7 @@ class PlayState extends FlxState
 		
 		//Give the fading away collectible a random velocity, release particles, and play a sound
 		collectible.angularVelocity = _RNG.float(45,90) * _RNG.int(-1,1,[0]);
-		_playerParticleSys.releaseParticles(5);
+		_playerParticleSys.releaseParticles(.1 ,5);
 		collectible.loadGraphic(AssetPaths.empty_wrapper__png, false, 29, 29);
 		FlxG.sound.play(AssetPaths.candyget__wav,.5);
 		//Remove collision from the collectible so that Overlap is not triggered
@@ -258,7 +279,7 @@ class PlayState extends FlxState
 	private function scoreTally(elapsed:Float):Void
 	{
 		_displayScore =  Math.ceil(FlxMath.lerp(_displayScore, _score, .25 * elapsed));
-		_scoreText.text = Std.string(_displayScore);
+		_scoreText.text = "Score: " + Std.string(_displayScore);
 	}
 	
 	/**
@@ -286,13 +307,18 @@ class PlayState extends FlxState
 	}
 	
 	/**
-	* Spawn a collectible at the position of the spawner after a certain time frame
+	* Reload scene after a set time
 	*
 	* @param    t: Functions that are called by a timer need a timer as an arg
 	* */
-	private function reloadScene(t:FlxTimer):Void
+	private function switchScene(t:FlxTimer):Void
 	{
-		FlxG.switchState(new PlayState());
+		var _gameSave:FlxSave = new FlxSave(); 
+		_gameSave.bind("HighScore"); 
+		_gameSave.data.hScore = Math.max (_score, _hScore );
+		_gameSave.data.score = _score;
+		_gameSave.flush();
+		FlxG.switchState(new GameOverState());
 	}	
 }
 
