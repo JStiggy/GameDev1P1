@@ -48,6 +48,7 @@ class GameOverState extends FlxState
 		_GameOverSplash.loadGraphic(AssetPaths.game_over__png, 400, 200);
 		_GameOverSplash.screenCenter();
 		_GameOverSplash.y -= 400;
+		_GameOverSplash.x += 10;
 		add(_GameOverSplash);
 		
 		

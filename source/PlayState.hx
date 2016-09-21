@@ -167,6 +167,8 @@ class PlayState extends FlxState
 			add(_scoreText);
 			add(_hScoreText);
 			_tripBackground.beginFade();
+			_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
+			_musicPlayer.play();
 			_baseBackground.reset(165, -450);
 			_title.storySection = 4;
 			_timer.start(.5, spawnCollectible, 0);
@@ -239,8 +241,6 @@ class PlayState extends FlxState
 				if (_title.storySection == 4)
 				{
 					_title.storySection++;
-					_musicPlayer.loadEmbedded(AssetPaths.rock_candy__ogg, true);
-					_musicPlayer.play();
 				}
 				
 				playerCollectibleOverlap(_player, _c);
