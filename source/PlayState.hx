@@ -41,6 +41,7 @@ class PlayState extends FlxState
 	private var _timer:FlxTimer; //Time between spawns
 	private var _musicPlayer:FlxSound; //Used to play music, has the ability to fade the music in and out
 	private var _title:TitleScreen; //Handle all intro content
+	private var _creepRain:CreepRain;
 	
 	override public function create():Void
 	{
@@ -100,9 +101,12 @@ class PlayState extends FlxState
 		_floor.solid = true;
 		_floor.elasticity = 0.8;
 		add(_floor);
-				
-		//Create the player and particle system actor
+		
 		_player = new Player(FlxG.width/2, _floor.y-64);
+		_creepRain = new CreepRain(_player);
+		add(_creepRain);
+		
+		//Create the player and particle system actor
 		_spawner = new Spawner(FlxG.width/2, 0, _player);
 		_playerParticleSys = new ModParticleSystem(_player, "particle.png", 0);
 		add(_playerParticleSys); //Particle system is added first so renders after the System
@@ -150,6 +154,13 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		scoreTally(elapsed);
+		
+		//Pressing H is just for demoing purposes
+		if (FlxG.keys.anyJustPressed([H]) || (_score % 420 == 0 && _score > 0))
+		{
+			_creepRain.startRain();
+			_score += 100;
+		}
 		
 		//This will only occur for a single update after the player has gained the start candy
 		if (_title.storySection == 3){
